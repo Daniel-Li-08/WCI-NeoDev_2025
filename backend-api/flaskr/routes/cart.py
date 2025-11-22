@@ -7,3 +7,70 @@ from google.cloud import firestore
 
 cartRoutes = Blueprint("cartRoutes", __name__)
 
+@cartRoutes.route('/cart/create', methods=["POST"])         
+def createUser():
+    obj = request.get_json()
+    if (type(obj) == str):
+        obj = json.loads(obj)
+
+    params = ['owner']
+
+    if not paramsEqual(params,obj.keys()):
+        return Response("Invalid params",status=400)
+    
+    collectRef = db.collection('Carts')
+
+    docs = collectRef.stream()
+    uids = [doc.get().to_dict()["owner"] for doc in docs]
+
+    if (obj["owner"] in uids): 
+        return Response("User already has a cart",status=400)
+
+    collectRef.add(
+        {
+            "items":[]
+        },
+        obj["owner"]
+    )
+
+    return Response("Passed",status=200)
+
+
+
+@cartRoutes.route('/cart/delete', methods=["POST"])
+def deleteUser():
+    obj = request.get_json()
+    if (type(obj) == str):
+        obj = json.loads(obj)
+    params = ['owner','pw']
+
+    if not paramsEqual(params,obj.keys()):
+        return Response("Invalid params",status=400)
+    
+    userRef = db.collection('Carts').document(obj["owner"])
+    if (userRef.get().to_dict() is None):
+        return Response("Cart doesn't exist",status=400)
+    
+    if userRef.get().to_dict()["pw"] != obj["pw"]:
+        return Response("Incorrect password",status=400)
+    
+    userRef.delete()
+
+    return Response("Passed",status=200)
+
+
+@cartRoutes.route('/cart/<name>', methods=["GET"])
+def getPrimeStatus(name):
+    data = request.get_json()
+    obj:dict = json.loads(data)
+
+    
+    userRef = db.collection('Carts').document(obj["name"])
+    if (userRef is None):
+        return Response("{}","Carts not found",status=400)
+    
+    items = userRef.get().to_dict()["items"]
+    
+    
+
+    return Response(json.dumps({"name":name,"items":items}),status=200)

@@ -60,12 +60,11 @@ def deleteUser():
     return Response("Passed",status=200)
 
 
-@userRoutes.route('/user/<name>', methods=["POST"])
+@userRoutes.route('/user/<name>', methods=["GET"])
 def getUser(name):
     obj = request.get_json()
     if (type(obj) == str):
         obj = json.loads(obj)
-
     
     userRef = db.collection('Users').document(obj["name"])
     if (userRef is None):
@@ -76,3 +75,19 @@ def getUser(name):
     
 
     return Response(json.dumps({"name":name,"prime":prime}),status=200)
+
+
+@userRoutes.route('/user/<name>/checkpw', methods=["GET"])
+def checkPw(name):
+    obj = request.get_json()
+    if (type(obj) == str):
+        obj = json.loads(obj)
+
+    userRef = db.collection('Users').document(obj["name"])
+    if (userRef is None):
+        return Response("{}","User not found",status=400)
+    
+    if (obj["pw"] != userRef.get().to_dict()["pw"]):
+        return Response("Incorrect password",status=400)
+    
+    return Response("Passed",status=200)
