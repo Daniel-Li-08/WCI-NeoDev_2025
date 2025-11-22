@@ -15,6 +15,11 @@ const Naxbar = () => {
 						Login
 					</a>
 				</li>
+				<li>
+					<a href="/sign-up" className="hover:text-blue-200 transition">
+						Sign Up
+					</a>
+				</li>
 			</ul>
 		</nav>
 	);
