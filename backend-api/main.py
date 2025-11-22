@@ -5,10 +5,7 @@ from flask_cors import CORS, cross_origin
 
 app = create_app()
 
-CORS(app,resources={r"*": {"origins": "*"}})
-@cross_origin
-def request():
-    ...
+CORS(app,resources={r"*": {"origins": "*"}},supports_credentials=True)
 
 
 def main(app:Flask):
