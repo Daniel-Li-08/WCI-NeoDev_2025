@@ -1,18 +1,16 @@
 from flaskr import create_app
 from flask import Flask
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 
 
 app = create_app()
 
-CORS(app,resources={r"/api/*": {"origins": "*"}},
-     origins=["*"],
-     
-     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+CORS(app,resources={r"*": {"origins": "*"}},
+)
+@cross_origin
+def request():
+    ...
 
-     )
 
 def main(app:Flask):
 
