@@ -8,7 +8,7 @@ from google.cloud import firestore
 cartRoutes = Blueprint("cartRoutes", __name__)
 
 @cartRoutes.route('/cart/create', methods=["POST"])         
-def createUser():
+def createCart():
     obj = request.get_json()
     if (type(obj) == str):
         obj = json.loads(obj)
@@ -38,7 +38,7 @@ def createUser():
 
 
 @cartRoutes.route('/cart/delete', methods=["POST"])
-def deleteUser():
+def deleteCart():
     obj = request.get_json()
     if (type(obj) == str):
         obj = json.loads(obj)
@@ -59,8 +59,8 @@ def deleteUser():
     return Response("Passed",status=200)
 
 
-@cartRoutes.route('/cart/<name>', methods=["GET"])
-def getPrimeStatus(name):
+@cartRoutes.route('/cart/getCart', methods=["POST"])
+def getCart():
     data = request.get_json()
     obj:dict = json.loads(data)
 
@@ -73,4 +73,4 @@ def getPrimeStatus(name):
     
     
 
-    return Response(json.dumps({"name":name,"items":items}),status=200)
+    return Response(json.dumps({"name":obj["name"],"items":items}),status=200)
