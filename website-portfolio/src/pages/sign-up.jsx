@@ -1,53 +1,37 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
-const Login = () => {
+const SignUp = () => {
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
-	const navigate = useNavigate();
+	const [isPrime, setIsPrime] = useState(false);
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		// Handle login logic here
-		try {
-			const response = await fetch(
-				`https://wci-neo-dev-2025api.vercel.app/user/checkpw`,
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify({
-						pw: password,
-						name: username,
-					}),
-				}
-			);
-
-			if (response.ok) {
-				alert('Login successful!');
-				const data = await response.json();
-				console.log(data);
-				localStorage.setItem('name', username);
-				localStorage.setItem('pw', password);
-				localStorage.setItem('prime', data.prime);
-				navigate('/cart');
-			} else if (response.status === 400) {
-				const error = await response.text();
-				alert(`Login failed: ${error}`);
-			} else {
-				const errorData = await response.text();
-				alert(errorData); // Show error message from backend
+		const data = JSON.stringify({
+			name: username,
+			pw: password,
+			prime: isPrime,
+		});
+		console.log(data);
+		const response = await fetch(
+			'https://wci-neo-dev-2025api.vercel.app/user/create',
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: data,
 			}
-		} catch (err) {
-			alert(`An error occurred: ${err.message}`);
-		}
+		);
+		const stuff = await response.json();
+		console.log(stuff);
 	};
 
 	return (
 		<div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
 			<div className="bg-white p-8 rounded shadow-md w-full max-w-sm">
-				<h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+				<h2 className="text-2xl font-bold mb-6 text-center">Sign Up</h2>
 				<form onSubmit={handleSubmit} className="flex flex-col space-y-4">
 					<input
 						type="text"
@@ -65,11 +49,19 @@ const Login = () => {
 						className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
 						required
 					/>
+					<label>
+						<input
+							type="checkbox"
+							checked={isPrime}
+							onChange={(e) => setIsPrime(e.target.checked)}
+						/>
+						Are you a Prime member?
+					</label>
 					<button
 						type="submit"
 						className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
 					>
-						Login
+						Sign Up
 					</button>
 				</form>
 			</div>
@@ -77,4 +69,4 @@ const Login = () => {
 	);
 };
 
-export default Login;
+export default SignUp;
