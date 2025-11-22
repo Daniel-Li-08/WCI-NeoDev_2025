@@ -54,12 +54,17 @@ async function render() {
     title.className = 'link-title';
     title.textContent = link.title || link.url;
 
+    // show quantity
+    const qtyEl = document.createElement('div');
+    qtyEl.className = 'link-qty';
+    qtyEl.textContent = `Quantity: ${link.qty || 1}`;
+
     const actions = document.createElement('div');
     actions.className = 'link-actions';
 
     const openBtn = document.createElement('button');
     openBtn.textContent = 'Open';
-    // tell background to open this link on the current tab and click add-to-cart
+    // tell background to open this link on the current tab and click add-to-cart (link includes qty now)
     openBtn.addEventListener('click', () => {
       chrome.runtime.sendMessage({ action: 'openAndClick', link });
     });
@@ -79,6 +84,7 @@ async function render() {
     urlEl.textContent = link.url;
 
     li.appendChild(title);
+    li.appendChild(qtyEl); // added quantity display
     li.appendChild(urlEl);
     li.appendChild(actions);
     list.appendChild(li);
@@ -104,15 +110,16 @@ function isAmazonUrl(url) {
   }
 }
 
-// replace addLink to only accept Amazon links
-async function addLink(title) {
+// replace addLink to accept qty and store it
+async function addLink(title, qty = 1) {
   const tab = await getActiveTab();
   if (!tab || !tab.url) throw new Error('No active tab with a URL');
   const normalized = normalizeUrl(tab.url);
   if (!normalized) throw new Error('Invalid URL');
   if (!isAmazonUrl(normalized)) throw new Error('Only Amazon links are allowed');
   const links = await getLinks();
-  links.unshift({ id: makeId(), title: title || tab.title || '', url: normalized });
+  const quantity = Math.max(1, parseInt(qty, 10) || 1);
+  links.unshift({ id: makeId(), title: title || tab.title || '', url: normalized, qty: quantity });
   await saveLinks(links);
 }
 
@@ -257,14 +264,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const form = document.getElementById('addForm');
   const titleInput = document.getElementById('title');
-  // url input removed
+  const qtyInput = document.getElementById('quantity');
 
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const title = titleInput.value.trim();
+    const qty = parseInt(qtyInput.value, 10) || 1;
     try {
-      await addLink(title);
+      await addLink(title, qty);
       titleInput.value = '';
+      qtyInput.value = '1';
       render();
     } catch (e) {
       alert('Unable to add current page — make sure a regular webpage is active and it is an Amazon product page.');

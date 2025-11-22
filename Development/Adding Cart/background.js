@@ -119,6 +119,125 @@ async function dismissNoThanks(tabId, attempts = 3, delayMs = 1200) {
   return false;
 }
 
+// new helper: dispatch an Escape key on the page (tries keydown/keyup on document/window/active element)
+async function pressEscape(tabId) {
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => {
+        try {
+          const makeEv = (type) => {
+            let ev;
+            try {
+              ev = new KeyboardEvent(type, { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true });
+            } catch (e) {
+              // fallback for strict environments
+              ev = document.createEvent('KeyboardEvent');
+              try { ev.initKeyboardEvent(type, true, true, window, 'Escape', 0, '', false, ''); } catch (e2) {}
+            }
+            return ev;
+          };
+          const down = makeEv('keydown');
+          const up = makeEv('keyup');
+          [document, window, document.activeElement].forEach(target => {
+            try {
+              if (target) {
+                target.dispatchEvent(down);
+                target.dispatchEvent(up);
+              }
+            } catch (e) {}
+          });
+        } catch (e) {}
+      }
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// robust helper: try repeatedly to set quantity on the page without throwing
+async function setQuantity(tabId, quantity, timeout = 8000, interval = 500) {
+  if (!quantity || quantity <= 1) return false;
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    try {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId },
+        func: (qty) => {
+          try {
+            const selectors = [
+              'select#quantity',
+              'select#quantity_1',
+              'select[name="quantity"]',
+              'select#qty',
+              'select#native-dropdown-select-quantity',
+              'input#quantity',
+              'input[name="quantity"]',
+              'input#qty'
+            ];
+            function setElValue(el, val) {
+              try {
+                const tag = (el.tagName || '').toLowerCase();
+                if (tag === 'select') {
+                  // try to pick an option that matches value or text
+                  const options = Array.from(el.options || []);
+                  const opt = options.find(o => o.value == String(val) || (o.text || '').trim() == String(val) || (o.text || '').includes(String(val)));
+                  if (opt) {
+                    el.value = opt.value;
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                    return true;
+                  }
+                  // fallback: try setting value directly
+                  el.value = String(val);
+                  el.dispatchEvent(new Event('change', { bubbles: true }));
+                  return true;
+                } else {
+                  el.focus && el.focus();
+                  el.value = String(val);
+                  el.dispatchEvent(new Event('input', { bubbles: true }));
+                  el.dispatchEvent(new Event('change', { bubbles: true }));
+                  el.blur && el.blur();
+                  return true;
+                }
+              } catch (e) {
+                return false;
+              }
+            }
+
+            for (const sel of selectors) {
+              try {
+                const el = document.querySelector(sel);
+                if (el && setElValue(el, qty)) return true;
+              } catch (e) { /* ignore per-selector errors */ }
+            }
+
+            // fallback: find labels or nearby controls mentioning "quantity"
+            const texts = Array.from(document.querySelectorAll('label, span, div')).filter(n => (n.innerText || '').toLowerCase().includes('quantity'));
+            for (const t of texts) {
+              const el = t.querySelector('select, input');
+              if (el && setElValue(el, qty)) return true;
+              // try closest selectable control
+              const close = t.closest('form, div, section')?.querySelector('select, input');
+              if (close && setElValue(close, qty)) return true;
+            }
+
+            return false;
+          } catch (e) {
+            return false;
+          }
+        },
+        args: [quantity]
+      });
+      if (Array.isArray(results) && results.length && results[0].result) return true;
+    } catch (e) {
+      // ignore injection errors and retry
+    }
+    await sleep(interval);
+  }
+  return false;
+}
+
 async function openAndClick(link) {
   const tab = await getActiveTab();
   if (!tab || !tab.id) return;
@@ -126,10 +245,21 @@ async function openAndClick(link) {
     chrome.tabs.update(tab.id, { url: link.url }, () => resolve());
   });
   await waitForTabComplete(tab.id);
+
+  try {
+    if (link.qty && link.qty > 1) {
+      await setQuantity(tab.id, link.qty);
+      await sleep(300);
+    }
+  } catch (e) {
+    // swallow any error and continue to attempt purchase
+  }
+
   await clickAddToCart(tab.id);
-  // try to dismiss any "No Thanks" / upsell prompts that may appear
   await sleep(500);
   await dismissNoThanks(tab.id, 4, 1000);
+  await sleep(200);
+  await pressEscape(tab.id);
 }
 
 async function cycleLinks(links, interval = 3000) {
@@ -140,10 +270,21 @@ async function cycleLinks(links, interval = 3000) {
       chrome.tabs.update(tab.id, { url: link.url }, () => resolve());
     });
     await waitForTabComplete(tab.id);
+
+    try {
+      if (link.qty && link.qty > 1) {
+        await setQuantity(tab.id, link.qty);
+        await sleep(300);
+      }
+    } catch (e) {
+      // continue even if quantity couldn't be set
+    }
+
     await clickAddToCart(tab.id);
-    // short pause, then try dismiss prompts that may appear after add-to-cart
     await sleep(600);
     await dismissNoThanks(tab.id, 4, 1000);
+    await sleep(200);
+    await pressEscape(tab.id);
     await sleep(interval);
   }
 }

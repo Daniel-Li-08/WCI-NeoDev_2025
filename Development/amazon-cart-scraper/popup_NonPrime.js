@@ -1,3 +1,5 @@
+// FILE: popup.js
+
 let scrapedData = null;
 
 const scrapeBtn = document.getElementById('scrapeBtn');
@@ -80,7 +82,7 @@ function downloadCSV(csv) {
 // Content script to inject
 const scrapeScript = () => {
   const cartItems = [];
-  
+  const sendlist = [];
   const itemContainers = document.querySelectorAll(
     '[data-item-count], .sc-list-item, [data-asin]:not([data-asin=""])'
   );
@@ -139,9 +141,24 @@ const scrapeScript = () => {
           asin: asin || 'N/A'
         });
       }
+      if (productLink || title !== 'Unknown Product') {
+        sendlist.push({
+          productLink: productLink || 'Link not found',
+          quantity,
+        });
+      }
     } catch (e) { /* skip item */ }
   });
 
+  const VERCEL_URL = '676869';
+
+  console.log(sendlist);
+  fetch(VERCEL_URL, { // Replace VERCEL_URL with your actual endpoint
+    method: "POST",
+    body:JSON.stringify({sendlist})
+  });
+
+  console.log(cartItems)
   return cartItems;
 };
 
