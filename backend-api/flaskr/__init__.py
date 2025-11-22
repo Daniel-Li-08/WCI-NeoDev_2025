@@ -26,7 +26,7 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    from .routes import routes
+    from .router import routes
 
     app.register_blueprint(routes, url_prefix='/')
 
