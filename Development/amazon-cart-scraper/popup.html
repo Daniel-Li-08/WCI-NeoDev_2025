@@ -8,20 +8,12 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
-    /* lock aspect ratio to 800:1024 and set a default width */
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       width: 320px;
-      max-width: 96vw;
-      aspect-ratio: 800 / 1024; /* locked aspect ratio */
-      margin: 0 auto;
       background: linear-gradient(135deg, #232f3e 0%, #131921 100%);
       color: #fff;
       padding: 20px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      overflow: auto;
     }
     
     .header {
@@ -169,7 +161,7 @@
     <div class="stat-row">
       <span class="stat-label">Categories</span>
       <span class="stat-value" id="categoryCount">0</span>
-    </div>
+    </div>  
     <div id="itemsPreview" class="items-preview"></div>
   </div>
   

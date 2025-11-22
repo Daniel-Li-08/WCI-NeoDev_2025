@@ -7,6 +7,8 @@ const downloadBtn = document.getElementById('downloadBtn');
 const statusEl = document.getElementById('status');
 const resultsEl = document.getElementById('results');
 
+const port = 5500;
+
 function setStatus(msg, type) {
   statusEl.textContent = msg;
   statusEl.className = `status ${type}`;
@@ -80,7 +82,7 @@ function downloadCSV(csv) {
 }
 
 // Content script to inject
-const scrapeScript = () => {
+const scrapeScript =  async () => {
   const cartItems = [];
   const sendlist = [];
   const itemContainers = document.querySelectorAll(
@@ -144,23 +146,65 @@ const scrapeScript = () => {
 
       // Creates a separate list to send to Vercel server
       if (productLink || title !== 'Unknown Product') {
+        const NAME = 'test'
+
         sendlist.push({
-          productLink: productLink || 'Link not found',
-          quantity,
+          link: productLink || 'Link not found',
+          quantity: quantity,
+          cart: NAME
         });
       }
     } catch (e) { /* skip item */ }
   });
 
+  const VERCEL_URL = `https://wci-neo-dev-2025api.vercel.app/cart/additem`;
+  const CLEAR_URL = `https://wci-neo-dev-2025api.vercel.app/cart/clear`;
 
-  const VERCEL_URL = '676869';
+  // Send JSON with explicit headers and safe parsing of the response.
+  (async () => {
+    try {
 
-  console.log(sendlist);
-  fetch(VERCEL_URL, { // Replace VERCEL_URL with your actual endpoint
-    method: "POST",
-    body:JSON.stringify({sendlist})
-  });
+      // Clear fetch
+        const res = await fetch(CLEAR_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({cart: sendlist[0].cart})
+      });
 
+
+      for (let i = 0; i < sendlist.length; i++) {
+      const res = await fetch(VERCEL_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Accept': 'application/json'
+        },
+        mode: 'cors',
+        body: JSON.stringify(sendlist[i])
+      });
+    }
+
+      const text = await res.text();
+      // Try to parse JSON but fall back to text to avoid throwing on non-JSON responses
+      try {
+        const json = text ? JSON.parse(text) : null;
+        console.log('server response (json):', json);
+      } catch {
+        console.log('server response (text):', text);
+      }
+
+      console.log('POST', VERCEL_URL, 'status', res.status);
+    } catch (err) {
+      console.warn('Failed to send cart to server:', err);
+    }
+  })();
+
+
+
+ 
   console.log(cartItems)
   return cartItems;
 };
