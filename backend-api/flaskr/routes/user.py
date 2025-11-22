@@ -127,3 +127,22 @@ def setCart():
     userRef.set(x)
 
     return Response("Joined",status=200)
+
+@userRoutes.route('/user/getCart', methods=["POST"])
+def setCart():
+    obj = request.get_json()
+    if (type(obj) == str):
+        obj = json.loads(obj)
+    params = ['name']
+
+    if not paramsEqual(params,obj.keys()):
+        return Response("Invalid params",status=400)
+
+
+    userRef = db.collection('Users').document(obj["name"])
+    if (userRef is None):
+        return Response("{}","User not found",status=400)
+    
+    x = userRef.get().to_dict()['cart']
+
+    return Response(json.dumps({"cart":x}),status=200)
