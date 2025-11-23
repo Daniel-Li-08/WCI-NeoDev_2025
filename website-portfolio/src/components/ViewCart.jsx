@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import AddItemModel from './AddItemModel';
 import CartItem from './CartItem';
 
 const ViewCart = () => {
 	const [cartItems, setCartItems] = useState([]);
+	const [cartOwner, setCartOwner] = useState('');
 
 	const loadCart = async () => {
-		let cartName = '';
 		if (localStorage.getItem('prime') == 'false') {
 			const cartNameResponse = await fetch(
 				'https://wci-neo-dev-2025api.vercel.app/user/getCart',
@@ -19,9 +20,9 @@ const ViewCart = () => {
 			);
 
 			const cartNameData = await cartNameResponse.json();
-			cartName = cartNameData.cart;
+			setCartOwner(cartNameData.cart);
 		} else {
-			cartName = localStorage.getItem('name');
+			setCartOwner(localStorage.getItem('name'));
 		}
 		const response = await fetch(
 			'https://wci-neo-dev-2025api.vercel.app/cart/getCart',
@@ -31,7 +32,7 @@ const ViewCart = () => {
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify({
-					owner: cartName,
+					owner: cartOwner,
 				}),
 			}
 		);
@@ -53,27 +54,51 @@ const ViewCart = () => {
 	}, []);
 
 	let cartContent;
+	const [isModalOpen, setIsModalOpen] = useState(false);
+
 	if (cartItems.length === 0) {
 		cartContent = (
-			<p className="font-semibold text-gray-500">
-				Your items will appear here.
-			</p>
+			<div className="flex flex-col items-center justify-center gap-4">
+				<img
+					src="smile_face.svg"
+					alt="Happy Face"
+					className="w-64 h-64 mt-8 object-contain rounded"
+				/>
+				<h1 className="text-neutral px-20 py-3 flex flex-row items-center justify-between text-3xl align-middle">
+					You are all caught up!
+				</h1>
+				<button
+					className="text-textColor bg-button rounded py-2 px-4 hover:bg-blue-200 transition"
+					onClick={() => setIsModalOpen(true)}
+				>
+					Add to Cart
+				</button>
+			</div>
 		);
 	} else {
-		cartContent = cartItems.map((item) => <CartItem item={item} />);
+		cartContent = cartItems.map((item) => (
+			<CartItem item={item} key={item.id || item._id || item.name} />
+		));
 	}
 
+	// render modal for adding items
+	const modal = (
+		<AddItemModel
+			isOpen={isModalOpen}
+			onClose={() => setIsModalOpen(false)}
+			onAdded={() => {
+				setIsModalOpen(false);
+				loadCart();
+			}}
+			cartOwner={cartOwner}
+		/>
+	);
+
 	return (
-		<div className="flex flex-col items-center justify-center my-[10vw]">
-			<h1 className="text-[#768F6A] px-20 py-3 flex flex-row items-center justify-between text-3xl align-middle">
-				{cartItems.length === 0 ? (
-					<span>Your cart is currently empty!</span>
-				) : (
-					<span>View your cart:</span>
-				)}
-			</h1>
+		<>
 			{cartContent}
-		</div>
+			{modal}
+		</>
 	);
 };
 
