@@ -53,6 +53,7 @@ Amaze brings communities closer while making shopping smoother.
 - **Database:** Firebase
 - **Deployment:** Vercel  
 
+Unlike many other new projects, Amaze, in the spirit of helping the environment, uses 0 Generative AI in it's operations
 ---
 
 ## Using Amaze
