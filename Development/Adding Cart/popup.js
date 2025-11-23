@@ -1,8 +1,41 @@
 console.log("Opened");
+
+const getKey = async (key) => {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tab = tabs[0]; 
+
+    // Execute script in the current tab
+    const fromPageLocalStore = await chrome.scripting.executeScript({ 
+      target: { tabId: tab.id }, 
+      function: (key) => localStorage[key], 
+      args : [ key],
+    });
+    return fromPageLocalStore[0].result;
+}
+
+const loadnames = async () => {
+
+        // Store the result  
+  
+  const nm = await getKey("name");
+  let pw = await getKey("pw");
+  let prime = await getKey("prime");
+  console.log(nm)
+  console.log(pw)
+  console.log(prime)
+  if (nm == null || pw == null || prime == null){
+    console.log("hello");
+    // chrome.tabs.create({ url: "https://wci-neo-dev-2025.vercel.app/sign-up"});
+  }
+}
+// Check for creds
+
+
+
+
 const STORAGE_KEY = 'savedLinks';
 
 async function addBackgroundFetch() {
-    console.log("HI");
     const response = await fetch("https://wci-neo-dev-2025api.vercel.app/cart/getCart", {
       method: "POST",
       headers: {
@@ -300,8 +333,9 @@ async function clearAll() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  loadnames();
   render();
-
+  
   const form = document.getElementById('addForm');
   const titleInput = document.getElementById('title');
   const qtyInput = document.getElementById('quantity');

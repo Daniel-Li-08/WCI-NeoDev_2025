@@ -188,6 +188,7 @@ const scrapeScript =  async () => {
     }
 
       const text = await res.text();
+      console.log(text)
       // Try to parse JSON but fall back to text to avoid throwing on non-JSON responses
       try {
         const json = text ? JSON.parse(text) : null;
