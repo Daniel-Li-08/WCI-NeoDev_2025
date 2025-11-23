@@ -1,15 +1,34 @@
 console.log("Opened");
+
+const getKey = async (key) => {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tab = tabs[0]; 
+
+    // Execute script in the current tab
+    const fromPageLocalStore = await chrome.scripting.executeScript({ 
+      target: { tabId: tab.id }, 
+      function: (key) => localStorage[key], 
+      args : [ key],
+    });
+    return fromPageLocalStore[0].result;
+}
+
+// Check for creds
+
+
 const STORAGE_KEY = 'savedLinks';
 
 async function addBackgroundFetch() {
-    console.log("HI");
+    
+    const nm =  await localStorage.getItem('name');
+
     const response = await fetch("https://wci-neo-dev-2025api.vercel.app/cart/getCart", {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
         "Accept": "application/json"
       },
-      body: JSON.stringify({ owner: "test" })
+      body: JSON.stringify({ owner: nm})
     });
  
     const cart = await response.json();
@@ -237,11 +256,13 @@ async function openLink(link) {
 
 // replace openAll to cycle through saved Amazon links on same active tab and click Add to Cart on each
 async function openAll(interval = 3000) {
+
   const links = await getLinks();
   if (!links.length) return;
   const tab = await getActiveTab();
   if (!tab) return;
 
+  
   for (const link of links) {
     // navigate
     await new Promise((resolve) => {
@@ -299,9 +320,15 @@ async function clearAll() {
   await saveLinks([]);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  render();
+async function setGreeting() {
+    const name = localStorage.getItem('name');
+    document.getElementById('greeting').innerHTML = `Welcome ${name}`;
+}
 
+document.addEventListener('DOMContentLoaded', () => {
+  setGreeting()
+  render();
+  
   const form = document.getElementById('addForm');
   const titleInput = document.getElementById('title');
   const qtyInput = document.getElementById('quantity');
@@ -331,3 +358,5 @@ document.addEventListener('DOMContentLoaded', () => {
     render();
   });
 });
+
+

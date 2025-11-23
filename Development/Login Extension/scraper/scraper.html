@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amazon Cart Scraper</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      width: 380px;
+      background: #FFFAF0;
+      padding: 24px;
+      min-height: 400px;
+    }
+    
+    #logo {
+      width: 180px;
+      max-width: 70%;
+      height: auto;
+      display: block;
+      margin: 0 auto 20px;
+      filter: drop-shadow(0 2px 4px rgba(118, 143, 106, 0.1));
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    
+    .header h1 {
+      font-size: 24px;
+      color: #768F6A;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    
+    .header p {
+      font-size: 14px;
+      color: #768F6A;
+      opacity: 0.7;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid #768F6A;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 10px;
+      font-family: inherit;
+    }
+    
+    .btn-primary {
+      background: #768F6A;
+      color: #FFFAF0;
+    }
+    
+    .btn-primary:hover {
+      background: #5f7555;
+      border-color: #5f7555;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(118, 143, 106, 0.2);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(118, 143, 106, 0.2);
+    }
+    
+    .btn-primary:disabled {
+      background: #768F6A;
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .status {
+      text-align: center;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin: 15px 0;
+      font-size: 13px;
+      font-weight: 500;
+      display: none;
+      border: 1.5px solid;
+    }
+    
+    .status.success {
+      display: block;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-color: #4caf50;
+    }
+    
+    .status.error {
+      display: block;
+      background: #ffebee;
+      color: #c62828;
+      border-color: #ef5350;
+    }
+    
+    .status.loading {
+      display: block;
+      background: #fff3e0;
+      color: #e65100;
+      border-color: #ff9800;
+    }
+    
+    .results {
+      background: white;
+      border: 1.5px solid #768F6A;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 20px;
+      display: none;
+      box-shadow: 0 2px 8px rgba(118, 143, 106, 0.1);
+    }
+    
+    .results.visible {
+      display: block;
+    }
+    
+    .results h3 {
+      font-size: 16px;
+      color: #768F6A;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(118, 143, 106, 0.15);
+      font-size: 13px;
+    }
+    
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+    
+    .stat-label {
+      color: #768F6A;
+      opacity: 0.7;
+    }
+    
+    .stat-value {
+      color: #768F6A;
+      font-weight: 600;
+    }
+    
+    .items-preview {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 12px;
+      font-size: 12px;
+    }
+    
+    .items-preview::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .items-preview::-webkit-scrollbar-track {
+      background: #FFFAF0;
+      border-radius: 3px;
+    }
+    
+    .items-preview::-webkit-scrollbar-thumb {
+      background: #768F6A;
+      border-radius: 3px;
+    }
+    
+    .item-row {
+      padding: 10px;
+      background: #FFFAF0;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(118, 143, 106, 0.2);
+    }
+    
+    .item-title {
+      color: #768F6A;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    
+    .item-meta {
+      color: #768F6A;
+      opacity: 0.6;
+      font-size: 11px;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #768F6A;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <img src="../assets/logo_2.svg" id="logo" alt="Logo">
+  
+  <div class="header">
+    <h1>🛒 Amaze Cart Scraper</h1>
+  </div>
+  
+  <button id="scrapeBtn" class="btn btn-primary">
+    Scrape Cart
+  </button>
+  
+  <div id="status" class="status"></div>
+  
+  <div id="results" class="results">
+    <h3>Scrape Results</h3>
+    <div class="stat-row">
+      <span class="stat-label">Items Found</span>
+      <span class="stat-value" id="itemCount">0</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Total Quantity</span>
+      <span class="stat-value" id="totalQty">0</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Categories</span>
+      <span class="stat-value" id="categoryCount">0</span>
+    </div>
+    <div id="itemsPreview" class="items-preview"></div>
+  </div>
+  
+  <script src="./scraper.js"></script>
+</body>
+</html>

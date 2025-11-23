@@ -1,11 +1,11 @@
 // FILE: popup.js
-
+console.log("scraper called");
 let scrapedData = null;
 
 const scrapeBtn = document.getElementById('scrapeBtn');
-const downloadBtn = document.getElementById('downloadBtn');
 const statusEl = document.getElementById('status');
 const resultsEl = document.getElementById('results');
+
 
 const port = 5500;
 
@@ -66,23 +66,8 @@ function generateCSV(items) {
   return [headers.join(','), ...rows].join('\n');
 }
 
-function downloadCSV(csv) {
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const filename = `amazon_cart_${new Date().toISOString().split('T')[0]}.csv`;
-  
-  chrome.downloads?.download?.({ url, filename, saveAs: true }) ||
-    (() => {
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    })();
-}
-
 // Content script to inject
-const scrapeScript =  async () => {
+const scrapeScript =  async (NAME) => {
   const cartItems = [];
   const sendlist = [];
   const itemContainers = document.querySelectorAll(
@@ -92,6 +77,7 @@ const scrapeScript =  async () => {
   const items = itemContainers.length > 0 
     ? itemContainers 
     : document.querySelectorAll('.sc-list-item-content, .a-list-item');
+
 
   items.forEach((item, idx) => {
     try {
@@ -146,7 +132,7 @@ const scrapeScript =  async () => {
 
       // Creates a separate list to send to Vercel server
       if (productLink || title !== 'Unknown Product') {
-        const NAME = 'test'
+        
 
         sendlist.push({
           link: productLink || 'Link not found',
@@ -188,6 +174,7 @@ const scrapeScript =  async () => {
     }
 
       const text = await res.text();
+      console.log(text)
       // Try to parse JSON but fall back to text to avoid throwing on non-JSON responses
       try {
         const json = text ? JSON.parse(text) : null;
@@ -212,8 +199,31 @@ const scrapeScript =  async () => {
 // Scrape button handler
 scrapeBtn.addEventListener('click', async () => {
   console.log('hello?')
+
+
+
+
+
+  const nm = await localStorage.getItem("name");
+
+
+
+    const res = await fetch("https://wci-neo-dev-2025api.vercel.app/user/getCart", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({name:nm})
+    });
+
+    const NAME = (await res.json()).cart
+    if (NAME == ""){
+        chrome.tabs.create({ url: "https://wci-neo-dev-2025.vercel.app/cart"});
+        return
+    }
+
   scrapeBtn.disabled = true;
-  downloadBtn.disabled = true;
   resultsEl.classList.remove('visible');
   setStatus('Scraping cart...', 'loading');
   
@@ -228,7 +238,8 @@ scrapeBtn.addEventListener('click', async () => {
     
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: scrapeScript
+      func: scrapeScript,
+      args: [NAME]
     });
     
     scrapedData = results[0]?.result || [];
@@ -241,19 +252,10 @@ scrapeBtn.addEventListener('click', async () => {
     
     setStatus(`Found ${scrapedData.length} item(s)!`, 'success');
     updateResults(scrapedData);
-    downloadBtn.disabled = false;
     
   } catch (err) {
     setStatus(`Error: ${err.message}`, 'error');
   }
   
   scrapeBtn.disabled = false;
-});
-
-// Download button handler
-downloadBtn.addEventListener('click', () => {
-  if (!scrapedData?.length) return;
-  const csv = generateCSV(scrapedData);
-  downloadCSV(csv);
-  setStatus('CSV downloaded!', 'success');
 });
