@@ -122,7 +122,6 @@ const scrapeScript =  async (NAME) => {
         '.a-link-normal[href*="/dp/"], ' +
         'a[href*="/gp/product/"]'
       );
-      const productLink = linkEl ? linkEl.href.split('?')[0] : null;
 
       // Quantity
       const qtySelect = item.querySelector(
@@ -148,6 +147,15 @@ const scrapeScript =  async (NAME) => {
         '.sc-product-title, .a-truncate-cut, .a-list-item .a-link-normal span'
       );
       const title = titleEl ? titleEl.textContent.trim() : 'Unknown Product';
+      
+      const productLink = linkEl ? linkEl.href.split('?')[0] : null;
+      // Reformat productLink: replace '/gp/' with a slugified title (spaces -> '-') and replace '/product/' with '/dp/'
+      const productLinkFormatted = productLink
+        ? productLink
+            .replace(/\/gp\/+/i, `/${title.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\-]/g, '')}/`)
+            .replace(/\/product\//i, '/dp/')
+        : null;
+      console.log(productLinkFormatted)
 
       // ASIN
       const asin = item.getAttribute('data-asin') || 
@@ -169,7 +177,7 @@ const scrapeScript =  async (NAME) => {
         
 
         sendlist.push({
-          link: productLink || 'Link not found',
+          link: productLinkFormatted || 'Link not found',
           quantity: quantity,
           cart: NAME
         });
