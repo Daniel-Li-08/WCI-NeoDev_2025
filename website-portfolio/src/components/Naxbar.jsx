@@ -19,7 +19,7 @@ const Naxbar = () => {
 	}, [location]);
 
 	return (
-		<nav className=" text-[#768F6A] px-20 py-3 flex flex-row items-center justify-between shadow-md text-3xl align-middle">
+		<nav className=" text-textColor px-20 py-3 flex flex-row items-center justify-between shadow-md text-3xl align-middle">
 			<a href="/">
 				<img
 					alt=""

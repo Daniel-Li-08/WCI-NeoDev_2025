@@ -3,5 +3,11 @@
 @tailwind utilities;
 
 :root {
-    background-color: #FFFAF0;
+	background-color: #fffaf0;
+	--background: #fffaf0;
+	--button-color: #e1dacd;
+	--neutral-color: #c2b9a8;
+	--extra-light: #c1dbb3;
+	--lighter: #9cba8d;
+	--text-color: #768f6a;
 }
