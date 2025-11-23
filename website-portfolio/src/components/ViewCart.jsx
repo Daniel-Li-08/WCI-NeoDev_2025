@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AddItemModel from './AddItemModel';
 import CartItem from './CartItem';
 
 const ViewCart = () => {
 	const [cartItems, setCartItems] = useState([]);
 	const [cartOwner, setCartOwner] = useState('');
+	const navigate = useNavigate();
 
 	const loadCart = async () => {
 		let cartName;
@@ -89,7 +91,7 @@ const ViewCart = () => {
 						Here is your cart <span className="text-lighter">{cartOwner}</span>
 					</h1>
 				) : (
-					<h1>
+					<h1 className="text-4xl text-textColor font-semibold mt-6 mb-4">
 						You are viewing <span className="text-lighter">{cartOwner}'s</span>{' '}
 						cart
 					</h1>
@@ -106,6 +108,7 @@ const ViewCart = () => {
 						<button
 							className="text-background bg-textColor rounded py-2 px-4 hover:bg-blue-200 transition"
 							onClick={() => {
+								navigate('/cart');
 								window.location.reload();
 							}}
 						>

@@ -22,7 +22,6 @@ const AddCart = () => {
 			}
 		);
 		if (response.ok) {
-			alert('Cart added successfully!');
 			navigate('/cart');
 			window.location.reload();
 		} else {

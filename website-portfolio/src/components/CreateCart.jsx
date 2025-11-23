@@ -4,11 +4,16 @@ const CreateCart = () => {
 	const navigate = useNavigate();
 	return (
 		<div className="flex flex-col items-center justify-center gap-4">
-			<h1 className="text-4xl font-bold mb-6 text-center text-[#768F6A] mt-4">
-				You are logged in as a prime user, would you like to create a new cart?
+			<img
+				src="sad_face.svg"
+				alt="Happy Face"
+				className="w-64 h-64 mt-8 object-contain rounded"
+			/>
+			<h1 className="text-neutral px-20 py-3 flex flex-row items-center justify-between text-3xl align-middle">
+				You currently don't have a cart!
 			</h1>
 			<button
-				className="text-[#768F6A] bg-[#E1DACD] text-4xl p-2 rounded hover:bg-blue-200 transition"
+				className="text-textColor font-semibold text-2xl bg-button rounded py-2 px-4 hover:bg-blue-200 transition"
 				onClick={async () => {
 					const response = await fetch(
 						'https://wci-neo-dev-2025api.vercel.app/cart/create',
@@ -23,7 +28,6 @@ const CreateCart = () => {
 						}
 					);
 					if (response.ok) {
-						alert('Cart created successfully!');
 						navigate('/cart');
 						window.location.reload();
 					} else {
