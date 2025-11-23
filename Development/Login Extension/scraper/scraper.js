@@ -20,6 +20,39 @@ function clearStatus() {
   statusEl.textContent = '';
 }
 
+const CLEAR_URL = `https://wci-neo-dev-2025api.vercel.app/cart/clear`;
+async function clearCart() {
+  const nm = await localStorage.getItem("name");
+
+
+
+    const res = await fetch("https://wci-neo-dev-2025api.vercel.app/user/getCart", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({name:nm})
+    });
+
+    const NAME = (await res.json()).cart
+    if (NAME == ""){
+        chrome.tabs.create({ url: "https://wci-neo-dev-2025.vercel.app/cart"});
+        return
+    }
+   // Clear fetch
+        await fetch(CLEAR_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({cart: NAME})
+      });
+}
+
+document.getElementById('clearBtn').addEventListener('click', () => {clearCart()})
+
 function updateResults(items) {
   document.getElementById('itemCount').textContent = items.length;
   document.getElementById('totalQty').textContent = 
@@ -145,21 +178,11 @@ const scrapeScript =  async (NAME) => {
   });
 
   const VERCEL_URL = `https://wci-neo-dev-2025api.vercel.app/cart/additem`;
-  const CLEAR_URL = `https://wci-neo-dev-2025api.vercel.app/cart/clear`;
 
   // Send JSON with explicit headers and safe parsing of the response.
   (async () => {
     try {
 
-      // Clear fetch
-        const res = await fetch(CLEAR_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({cart: sendlist[0].cart})
-      });
 
 
       for (let i = 0; i < sendlist.length; i++) {
