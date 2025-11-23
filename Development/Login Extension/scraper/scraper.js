@@ -1,5 +1,6 @@
 // FILE: popup.js
 console.log("scraper called");
+setGreeting();
 let scrapedData = null;
 
 const scrapeBtn = document.getElementById('scrapeBtn');
@@ -218,6 +219,30 @@ const scrapeScript =  async (NAME) => {
   console.log(cartItems)
   return cartItems;
 };
+
+async function setGreeting() {
+    const name = localStorage.getItem('name');
+    document.getElementById('greeting').innerHTML = `Welcome ${name}`;
+    const nm = await localStorage.getItem("name");
+
+
+
+    const res = await fetch("https://wci-neo-dev-2025api.vercel.app/user/getCart", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({name:nm})
+    });
+
+    const NAME = (await res.json()).cart
+    document.getElementById('scrapeBtn').innerHTML = `Send to ${NAME}'s cart`;
+    if (NAME == ""){
+        chrome.tabs.create({ url: "https://wci-neo-dev-2025.vercel.app/cart"});
+        return
+    }
+}
 
 // Scrape button handler
 scrapeBtn.addEventListener('click', async () => {

@@ -35,7 +35,7 @@ async function addBackgroundFetch() {
     const items = cart.items || [];
 
     // Get current saved links
-    await clearAll()
+    await smallClearAll()
     chrome.storage.local.get([STORAGE_KEY], (result) => {
       const links =  [];
       // Add fetched items
@@ -416,6 +416,10 @@ async function clearAll() {
     });
   await saveLinks([]);
 }
+async function smallClearAll() {
+  await saveLinks([]);
+}
+
 
 async function setGreeting() {
     const name = localStorage.getItem('name');
@@ -436,7 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
     openAll();
     
   });
-
   document.getElementById('clearAll').addEventListener('click', async () => {
     if (!confirm('Clear all saved links?')) return;
     await clearAll();
